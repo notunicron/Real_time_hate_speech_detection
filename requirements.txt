@@ -1,0 +1,9 @@
+transformers            4.51.3
+# torch -- install from official pytorch web page suitable for your configuration version
+numpy                   2.2.5
+sounddevice             0.5.1
+keyboard                0.13.5
+colorama                0.4.6
+datasets                3.5.1
+seqeval                 1.2.2
+accelerate              1.6.0

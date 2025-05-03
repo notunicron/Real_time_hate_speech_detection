@@ -1,0 +1,5 @@
+# venv variables
+/.venv
+
+# models
+/*model*
