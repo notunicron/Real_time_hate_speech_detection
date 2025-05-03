@@ -16,6 +16,9 @@ This project implements a system for detecting potentially hateful or offensive 
 *   Configurable stop key ('q' by default) to end the detection process.
 *   Includes the Python script to train the custom word-level detection model.
 
+## Metrics
+* Accuracy on validation set was: 0.93
+
 ## Requirements
 
 *   **Python 3.8+**
