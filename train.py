@@ -19,8 +19,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- Configuration ---
-MODEL_CHECKPOINT = "bert-base-uncased"  # Or choose another like "roberta-base"
-# --- MODIFIED: Only need one file path ---
+MODEL_CHECKPOINT = "bert-base-uncased"
 DATASET_FILE = "./dataset.json" # Path to your single JSON file
 OUTPUT_DIR = "./hatexplain_word_level_model_embedded_rationales"
 LABEL_LIST = ["O", "B-HATE", "I-HATE"] # Our BIO tags
@@ -66,10 +65,10 @@ def load_hatexplain_data_embedded(dataset_file):
         if majority_label in ['hatespeech', 'offensive']:
             # Check if number of rationales matches number of annotators
             if len(post_data['annotators']) != len(post_data['rationales']):
-                 logger.warning(f"Skipping post {post_id}: Mismatch between annotator count ({len(post_data['annotators'])}) and rationale count ({len(post_data['rationales'])}).")
-                 # Decide how to handle: skip, or try to align if possible (skipping is safer)
-                 skipped_count += 1
-                 continue # Skip this entry
+                logger.warning(f"Skipping post {post_id}: Mismatch between annotator count ({len(post_data['annotators'])}) and rationale count ({len(post_data['rationales'])}).")
+                # Decide how to handle: skip, or try to align if possible (skipping is safer)
+                skipped_count += 1
+                continue # Skip this entry
 
             # Iterate through annotators and their corresponding rationale mask
             for i, annotator in enumerate(post_data['annotators']):
@@ -78,10 +77,10 @@ def load_hatexplain_data_embedded(dataset_file):
 
                 # Check if mask length matches token length
                 if len(rationale_mask) != len(post_data['post_tokens']):
-                     logger.warning(f"Skipping post {post_id}, annotator {i}: Rationale mask length ({len(rationale_mask)}) mismatch with token count ({len(post_data['post_tokens'])}).")
-                     # This specific rationale might be unusable, but we could potentially continue with others
-                     # For safety, we might skip the whole post if any rationale is bad, or just skip this annotator's rationale
-                     continue # Skip this specific annotator's rationale
+                    logger.warning(f"Skipping post {post_id}, annotator {i}: Rationale mask length ({len(rationale_mask)}) mismatch with token count ({len(post_data['post_tokens'])}).")
+                    # This specific rationale might be unusable, but we could potentially continue with others
+                    # For safety, we might skip the whole post if any rationale is bad, or just skip this annotator's rationale
+                    continue # Skip this specific annotator's rationale
 
                 # Consider this rationale only if the annotator labeled it as hate/offensive
                 if annotator_label in ['hatespeech', 'offensive']:
@@ -102,7 +101,6 @@ def load_hatexplain_data_embedded(dataset_file):
     return processed_data
 
 logger.info(f"Loading data from {DATASET_FILE}...")
-# --- MODIFIED: Call the new loading function ---
 raw_data = load_hatexplain_data_embedded(DATASET_FILE)
 logger.info(f"Loaded {len(raw_data)} examples.")
 
@@ -114,12 +112,12 @@ intitial_features = Features({
     'rationale_word_indices': Sequence(Value('int32'))
 })
 
-# Convert to Hugging Face Dataset (remains the same)
+# Convert to Hugging Face Dataset
 logger.info("Creating initial Dataset object...")
 hf_dataset = Dataset.from_list(raw_data, features=intitial_features)
 logger.info("Initial Dataset object created.")
 
-# --- 2. Tokenization and Label Alignment (remains the same) ---
+# --- 2. Tokenization and Label Alignment ---
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_CHECKPOINT)
 
@@ -180,7 +178,6 @@ if 'train' not in tokenized_dataset or 'test' not in tokenized_dataset:
      logger.info("Splitting dataset into train, validation, and test sets.")
      shuffled_dataset = tokenized_dataset.shuffle(seed=42)
      train_test_split = shuffled_dataset.train_test_split(test_size=TEST_SPLIT_RATIO)
-     # Adjust validation split ratio relative to the remaining training data
      valid_ratio_adjusted = VALID_SPLIT_RATIO / (1 - TEST_SPLIT_RATIO)
      train_valid_split = train_test_split['train'].train_test_split(test_size=valid_ratio_adjusted)
 
@@ -236,7 +233,7 @@ def compute_metrics(p):
 
     return results
 
-# --- 6. Training (remains the same) ---
+# --- 6. Training ---
 data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
 
 args = TrainingArguments(
@@ -270,12 +267,12 @@ logger.info("Starting training...")
 train_result = trainer.train()
 logger.info("Training finished.")
 
-# --- 7. Evaluation on Test Set (remains the same) ---
+# --- 7. Evaluation on Test Set ---
 logger.info("Evaluating on the test set...")
 test_results = trainer.evaluate(eval_dataset=final_datasets["test"])
 logger.info(f"Test Set Evaluation Results: {test_results}")
 
-# --- 8. Save the final model and tokenizer (remains the same) ---
+# --- 8. Save the final model and tokenizer ---
 logger.info(f"Saving the best model to {OUTPUT_DIR}")
 trainer.save_model(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)
@@ -289,7 +286,7 @@ with open(output_test_results_file, "w") as writer:
 
 logger.info("Script finished successfully.")
 
-# --- How to use the trained model (Example - remains the same) ---
+# --- How to use the trained model (example) ---
 # from transformers import pipeline
 
 # word_hate_pipe = pipeline(
